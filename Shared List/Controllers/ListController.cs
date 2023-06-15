@@ -49,48 +49,9 @@ namespace Shared_List.Controllers
             return View();
         }
 
-        //// post: list/create
-        //[httppost]
-        //[validateantiforgerytoken]
-        //public async task<iactionresult> create(string title, string email)
-        //{
-        //    if (modelstate.isvalid)
-        //    {
-        //        var userid = _usermanager.getuserid(user);
-
-        //        var list = new list
-        //        {
-        //            title = title
-        //        };
-
-        //        _dbcontext.lists.add(list);
-        //        await _dbcontext.savechangesasync();
-
-        //        if (!string.isnullorwhitespace(email))
-        //        {
-        //            var user = await _usermanager.findbyemailasync(email);
-        //            if (user != null)
-        //            {
-        //                var userlist = new userlist
-        //                {
-        //                    listid = list.id,
-        //                    userid = user.id
-        //                };
-
-        //                _dbcontext.userlists.add(userlist);
-        //                await _dbcontext.savechangesasync();
-        //            }
-        //        }
-
-        //        return redirecttoaction("index");
-        //    }
-
-        //    return view();
-        //}
-
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(string title, string email)
+        public async Task<IActionResult> Create(string title, string description, string email)
         {
             if (ModelState.IsValid)
             {
@@ -98,7 +59,8 @@ namespace Shared_List.Controllers
 
                 var list = new Note
                 {
-                    Title = title
+                    Title = title,
+                    Description = description
                 };
 
                 _dbContext.Lists.Add(list);
@@ -146,7 +108,6 @@ namespace Shared_List.Controllers
                 return NotFound();
             }
 
-            // Ensure that the current user has the necessary rights to edit the list
             var userId = _userManager.GetUserId(User);
             var userList = await _dbContext.UserLists.FirstOrDefaultAsync(ul => ul.ListId == id && ul.UserId == userId);
             if (userList == null)
@@ -157,7 +118,8 @@ namespace Shared_List.Controllers
             var viewModel = new EditListViewModel
             {
                 Id = list.Id,
-                Title = list.Title
+                Title = list.Title,
+                Description = list.Description,
             };
 
             return View(viewModel);
@@ -170,7 +132,6 @@ namespace Shared_List.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Ensure that the current user has the necessary rights to edit the list
                 var userId = _userManager.GetUserId(User);
                 var userList = await _dbContext.UserLists.FirstOrDefaultAsync(ul => ul.ListId == viewModel.Id && ul.UserId == userId);
                 if (userList == null)
@@ -185,6 +146,7 @@ namespace Shared_List.Controllers
                 }
 
                 list.Title = viewModel.Title;
+                list.Description = viewModel.Description;
 
                 _dbContext.Update(list);
                 await _dbContext.SaveChangesAsync();
@@ -197,16 +159,6 @@ namespace Shared_List.Controllers
 
 
 
-
-
-
-
-        private bool ListExists(int id)
-        {
-            return _dbContext.Lists.Any(e => e.Id == id);
-        }
-
-
         // GET: List/Delete/5
         public async Task<IActionResult> Delete(int id)
         {
@@ -216,7 +168,6 @@ namespace Shared_List.Controllers
                 return NotFound();
             }
 
-            // Ensure that the current user has the necessary rights to delete the list
             var userId = _userManager.GetUserId(User);
             var userList = await _dbContext.UserLists.FirstOrDefaultAsync(ul => ul.ListId == id && ul.UserId == userId);
             if (userList == null)
@@ -238,7 +189,6 @@ namespace Shared_List.Controllers
                 return NotFound();
             }
 
-            // Ensure that the current user has the necessary rights to delete the list
             var userId = _userManager.GetUserId(User);
             var userList = await _dbContext.UserLists.FirstOrDefaultAsync(ul => ul.ListId == id && ul.UserId == userId);
             if (userList == null)

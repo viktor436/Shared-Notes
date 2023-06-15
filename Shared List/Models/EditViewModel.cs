@@ -8,6 +8,8 @@ namespace Shared_List.Models
 
         [Required(ErrorMessage = "The Title field is required.")]
         public string Title { get; set; }
+
+        public string Description { get; set; }
     }
 }
 
