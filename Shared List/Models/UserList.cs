@@ -1,4 +1,6 @@
-﻿namespace Shared_List.Models
+﻿using Microsoft.AspNetCore.Identity;
+
+namespace Shared_List.Models
 {
     public class UserList
     {
@@ -6,7 +8,7 @@
         public int ListId { get; set; }
         public string UserId { get; set; }
         public virtual Note List { get; set; }
-        public virtual ApplicationUser User { get; set; }
+        public virtual IdentityUser User { get; set; }
     }
 }
 

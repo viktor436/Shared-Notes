@@ -248,7 +248,7 @@ namespace Shared_List.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Lists");
+                    b.ToTable("Lists", (string)null);
                 });
 
             modelBuilder.Entity("Shared_List.Models.UserList", b =>
@@ -266,7 +266,7 @@ namespace Shared_List.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserLists");
+                    b.ToTable("UserLists", (string)null);
                 });
 
             modelBuilder.Entity("Shared_List.Models.ApplicationUser", b =>

@@ -66,7 +66,7 @@ namespace Shared_List.Controllers
                 _dbContext.Lists.Add(list);
                 await _dbContext.SaveChangesAsync();
 
-                if (!string.IsNullOrWhiteSpace(email))
+                if (!string.IsNullOrWhiteSpace(email)&& email != User.Identity.Name)
                 {
                     var user = await _userManager.FindByEmailAsync(email);
                     if (user != null)
@@ -203,24 +203,75 @@ namespace Shared_List.Controllers
         }
 
 
-        public IActionResult Share(int listId)
+        // GET: List/Share/5
+        [HttpGet]
+        public async Task<IActionResult> Share(int id)
         {
-            var userId = _userManager.GetUserId(User);
-
-            var userList = new UserList
+            var note = await _dbContext.Lists.FindAsync(id);
+            if (note == null)
             {
-                ListId = listId,
-                UserId = userId
+                return NotFound();
+            }
+
+            // Ensure that the current user has the necessary rights to share the note
+            var userId = _userManager.GetUserId(User);
+            var userList = await _dbContext.UserLists.FirstOrDefaultAsync(ul => ul.ListId == id && ul.UserId == userId);
+            if (userList == null)
+            {
+                return Forbid();
+            }
+            var usersWithAccess = await _dbContext.UserLists
+        .Where(ul => ul.ListId == id)
+        .Select(ul => ul.User)
+        .ToListAsync();
+
+            var viewModel = new ShareListViewModel
+            {
+                NoteId = note.Id,
+                NoteTitle = note.Title,
+                Users = usersWithAccess
             };
 
-            using (var db = _dbContext)
+            return View(viewModel);
+        }
+
+        // POST: List/Share/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Share(int id, string email)
+        {
+            var note = await _dbContext.Lists.FindAsync(id);
+            if (note == null)
             {
-                db.UserLists.Add(userList);
-                db.SaveChanges();
+                return NotFound();
+            }
+
+            // Ensure that the current user has the necessary rights to share the note
+            var userId = _userManager.GetUserId(User);
+            var userList = await _dbContext.UserLists.FirstOrDefaultAsync(ul => ul.ListId == id && ul.UserId == userId);
+            if (userList == null)
+            {
+                return Forbid();
+            }
+
+            if (!string.IsNullOrWhiteSpace(email)&&email != User.Identity.Name)
+            {
+                var user = await _userManager.FindByEmailAsync(email);
+                if (user != null)
+                {
+                    var userNote = new UserList
+                    {
+                        ListId = id,
+                        UserId = user.Id
+                    };
+
+                    _dbContext.UserLists.Add(userNote);
+                    await _dbContext.SaveChangesAsync();
+                }
             }
 
             return RedirectToAction("Index");
         }
-       
+
     }
 }
