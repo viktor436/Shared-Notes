@@ -18,6 +18,7 @@
                     <td>@userList.List.Title</td>
                     <td>
                         <a href="@Url.Action("Edit", "List", new { id = userList.ListId })">Edit</a>
+                        <a href="@Url.Action("Delete", "List", new { id = userList.ListId })">Delete</a>
                     </td>
                 </tr>
             }
@@ -26,5 +27,5 @@
 }
 else
 {
-    <p>No shared lists found.</p>
+    <p>No shared Notes found.</p>
 }

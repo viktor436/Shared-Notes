@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Shared_List.Data;
 
@@ -11,9 +12,10 @@ using Shared_List.Data;
 namespace Shared_List.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230615133759_user-list")]
+    partial class userlist
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -230,7 +232,7 @@ namespace Shared_List.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Shared_List.Models.Note", b =>
+            modelBuilder.Entity("Shared_List.Models.List", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -238,11 +240,17 @@ namespace Shared_List.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<string>("CreatorId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatorId");
 
                     b.ToTable("Lists");
                 });
@@ -323,9 +331,20 @@ namespace Shared_List.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Shared_List.Models.List", b =>
+                {
+                    b.HasOne("Shared_List.Models.ApplicationUser", "Creator")
+                        .WithMany()
+                        .HasForeignKey("CreatorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Creator");
+                });
+
             modelBuilder.Entity("Shared_List.Models.UserList", b =>
                 {
-                    b.HasOne("Shared_List.Models.Note", "List")
+                    b.HasOne("Shared_List.Models.List", "List")
                         .WithMany("UserLists")
                         .HasForeignKey("ListId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -342,7 +361,7 @@ namespace Shared_List.Data.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Shared_List.Models.Note", b =>
+            modelBuilder.Entity("Shared_List.Models.List", b =>
                 {
                     b.Navigation("UserLists");
                 });

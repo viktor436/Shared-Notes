@@ -10,7 +10,7 @@ namespace Shared_List.Data
             : base(options)
         {
         }
-        public DbSet<List> Lists { get; set; }
+        public DbSet<Note> Lists { get; set; }
         public DbSet<UserList> UserLists { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

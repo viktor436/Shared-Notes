@@ -9,6 +9,7 @@ using static Humanizer.In;
 using System.Numerics;
 using System;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 
 namespace Shared_List.Controllers
 {
@@ -48,7 +49,45 @@ namespace Shared_List.Controllers
             return View();
         }
 
-        // POST: List/Create
+        //// post: list/create
+        //[httppost]
+        //[validateantiforgerytoken]
+        //public async task<iactionresult> create(string title, string email)
+        //{
+        //    if (modelstate.isvalid)
+        //    {
+        //        var userid = _usermanager.getuserid(user);
+
+        //        var list = new list
+        //        {
+        //            title = title
+        //        };
+
+        //        _dbcontext.lists.add(list);
+        //        await _dbcontext.savechangesasync();
+
+        //        if (!string.isnullorwhitespace(email))
+        //        {
+        //            var user = await _usermanager.findbyemailasync(email);
+        //            if (user != null)
+        //            {
+        //                var userlist = new userlist
+        //                {
+        //                    listid = list.id,
+        //                    userid = user.id
+        //                };
+
+        //                _dbcontext.userlists.add(userlist);
+        //                await _dbcontext.savechangesasync();
+        //            }
+        //        }
+
+        //        return redirecttoaction("index");
+        //    }
+
+        //    return view();
+        //}
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(string title, string email)
@@ -57,7 +96,7 @@ namespace Shared_List.Controllers
             {
                 var userId = _userManager.GetUserId(User);
 
-                var list = new List
+                var list = new Note
                 {
                     Title = title
                 };
@@ -81,6 +120,16 @@ namespace Shared_List.Controllers
                     }
                 }
 
+                // Grant access to the creator
+                var creatorList = new UserList
+                {
+                    ListId = list.Id,
+                    UserId = userId
+                };
+
+                _dbContext.UserLists.Add(creatorList);
+                await _dbContext.SaveChangesAsync();
+
                 return RedirectToAction("Index");
             }
 
@@ -88,47 +137,121 @@ namespace Shared_List.Controllers
         }
 
 
-        // GET: ListController/Edit/5
-        public ActionResult Edit(int id)
+        // GET: List/Edit/5
+        public async Task<IActionResult> Edit(int id)
         {
-            return View();
+            var list = await _dbContext.Lists.FindAsync(id);
+            if (list == null)
+            {
+                return NotFound();
+            }
+
+            // Ensure that the current user has the necessary rights to edit the list
+            var userId = _userManager.GetUserId(User);
+            var userList = await _dbContext.UserLists.FirstOrDefaultAsync(ul => ul.ListId == id && ul.UserId == userId);
+            if (userList == null)
+            {
+                return Forbid();
+            }
+
+            var viewModel = new EditListViewModel
+            {
+                Id = list.Id,
+                Title = list.Title
+            };
+
+            return View(viewModel);
         }
 
-        // POST: ListController/Edit/5
+        // POST: List/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public async Task<IActionResult> Edit(EditListViewModel viewModel)
         {
-            try
+            if (ModelState.IsValid)
             {
-                return RedirectToAction(nameof(Index));
+                // Ensure that the current user has the necessary rights to edit the list
+                var userId = _userManager.GetUserId(User);
+                var userList = await _dbContext.UserLists.FirstOrDefaultAsync(ul => ul.ListId == viewModel.Id && ul.UserId == userId);
+                if (userList == null)
+                {
+                    return Forbid();
+                }
+
+                var list = await _dbContext.Lists.FindAsync(viewModel.Id);
+                if (list == null)
+                {
+                    return NotFound();
+                }
+
+                list.Title = viewModel.Title;
+
+                _dbContext.Update(list);
+                await _dbContext.SaveChangesAsync();
+
+                return RedirectToAction("Index");
             }
-            catch
-            {
-                return View();
-            }
+
+            return View(viewModel);
         }
 
-        // GET: ListController/Delete/5
-        public ActionResult Delete(int id)
+
+
+
+
+
+
+        private bool ListExists(int id)
         {
-            return View();
+            return _dbContext.Lists.Any(e => e.Id == id);
         }
 
-        // POST: ListController/Delete/5
-        [HttpPost]
+
+        // GET: List/Delete/5
+        public async Task<IActionResult> Delete(int id)
+        {
+            var list = await _dbContext.Lists.FindAsync(id);
+            if (list == null)
+            {
+                return NotFound();
+            }
+
+            // Ensure that the current user has the necessary rights to delete the list
+            var userId = _userManager.GetUserId(User);
+            var userList = await _dbContext.UserLists.FirstOrDefaultAsync(ul => ul.ListId == id && ul.UserId == userId);
+            if (userList == null)
+            {
+                return Forbid();
+            }
+
+            return View(list);
+        }
+
+        // POST: List/Delete/5
+        [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            try
+            var list = await _dbContext.Lists.FindAsync(id);
+            if (list == null)
             {
-                return RedirectToAction(nameof(Index));
+                return NotFound();
             }
-            catch
+
+            // Ensure that the current user has the necessary rights to delete the list
+            var userId = _userManager.GetUserId(User);
+            var userList = await _dbContext.UserLists.FirstOrDefaultAsync(ul => ul.ListId == id && ul.UserId == userId);
+            if (userList == null)
             {
-                return View();
+                return Forbid();
             }
+
+            _dbContext.Lists.Remove(list);
+            await _dbContext.SaveChangesAsync();
+
+            return RedirectToAction("Index");
         }
+
 
         public IActionResult Share(int listId)
         {
