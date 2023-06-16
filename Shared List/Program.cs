@@ -16,7 +16,11 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
-
+builder.Services.AddAuthentication().AddFacebook(options =>
+{ 
+    options.AppId = "831076791716745";
+    options.AppSecret = "6a54192e654323ca3e346e6fd6d5c968";
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
