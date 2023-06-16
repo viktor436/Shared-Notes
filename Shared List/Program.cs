@@ -13,10 +13,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.Configure<Config>(builder.Configuration.GetSection("Config"));
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
+
+builder.Services.Configure<Config>(builder.Configuration.GetSection("Config"));
+
 var configuration = builder.Configuration;
 builder.Services.AddAuthentication().AddFacebook(options =>
 {
