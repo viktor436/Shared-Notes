@@ -23,6 +23,7 @@
                     <label asp-for="Input.Password" class="form-label"></label>
                     <span asp-validation-for="Input.Password" class="text-danger"></span>
                 </div>
+                <div class="g-recaptcha" data-sitekey="@ViewData["ReCaptchaKey"]"></div>
                 <div>
                     <div class="checkbox">
                         <label asp-for="Input.RememberMe" class="form-label">
@@ -82,4 +83,5 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src='https://www.google.com/recaptcha/api.js'></script>
 }

@@ -14,6 +14,12 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
+using System.Net;
+using Microsoft.Extensions.Primitives;
+using System.Net.Http;
+using Shared_List.Singleton;
+using Microsoft.Extensions.Options;
 
 namespace Shared_List.Areas.Identity.Pages.Account
 {
@@ -22,10 +28,13 @@ namespace Shared_List.Areas.Identity.Pages.Account
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
 
-        public LoginModel(SignInManager<IdentityUser> signInManager, ILogger<LoginModel> logger)
+        private readonly Config _config;
+
+        public LoginModel(SignInManager<IdentityUser> signInManager, ILogger<LoginModel> logger, IOptions<Config> config)
         {
             _signInManager = signInManager;
             _logger = logger;
+            _config = config.Value;
         }
 
         /// <summary>
@@ -97,6 +106,7 @@ namespace Shared_List.Areas.Identity.Pages.Account
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+            ViewData["ReCaptchaKey"] = _config.CaptchaKey;
 
             ReturnUrl = returnUrl;
         }
@@ -107,11 +117,22 @@ namespace Shared_List.Areas.Identity.Pages.Account
 
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
+            ViewData["ReCaptchaKey"] = _config.CaptchaKey;
+
             if (ModelState.IsValid)
             {
-                // This doesn't count login failures towards account lockout
-                // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+                if (!ReCaptchaPassed(
+                    Request.Form["g-recaptcha-response"],
+                    _config.CaptchaSecret,
+                    _logger
+                ))
+                {
+                    ModelState.AddModelError(string.Empty, "You failed the CAPTCHA, stupid robot. Go play some 1x1 on SFs instead.");
+                    return Page();
+                }
+                    // This doesn't count login failures towards account lockout
+                    // To enable password failures to trigger account lockout, set lockoutOnFailure: true
+                    var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
@@ -135,6 +156,30 @@ namespace Shared_List.Areas.Identity.Pages.Account
 
             // If we got this far, something failed, redisplay form
             return Page();
+
+
+        }
+
+        
+
+        public static bool ReCaptchaPassed(string gRecaptchaResponse, string secret, ILogger logger)
+        {
+            HttpClient httpClient = new HttpClient();
+            var res = httpClient.GetAsync($"https://www.google.com/recaptcha/api/siteverify?secret={secret}&response={gRecaptchaResponse}").Result;
+            if (res.StatusCode != HttpStatusCode.OK)
+            {
+                logger.LogError("Error while sending request to ReCaptcha");
+                return false;
+            }
+
+            string JSONres = res.Content.ReadAsStringAsync().Result;
+            dynamic JSONdata = JObject.Parse(JSONres);
+            if (JSONdata.success != "true")
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }
