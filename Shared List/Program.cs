@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Shared_List.Data;
 using Shared_List.Models;
+using Shared_List.Singleton;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,10 +13,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-
+builder.Services.Configure<Config>(builder.Configuration.GetSection("Config"));
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
+
 builder.Services.AddAuthentication().AddFacebook(options =>
 { 
     options.AppId = "831076791716745";
