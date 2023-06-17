@@ -10,9 +10,11 @@ using System.Numerics;
 using System;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Shared_List.Controllers
 {
+    [Authorize]
     public class ListController : Controller
     {
         private readonly UserManager<IdentityUser> _userManager;
