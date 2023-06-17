@@ -58,5 +58,5 @@ This project can be deployed to Azure App Service:
 1. Create an Azure App Service.
 2. Publish the application to the App Service using Visual Studio or any other preferred deployment method.
 3. Configure the necessary environment variables, including the database connection string, in the App Service settings.
-Note: if you use PostgreSQL(like me) there are known issues, refer:
+- Note: if you use PostgreSQL(like me) there are known issues, refer: https://github.com/Azure/azure-cli/issues/21129
 For detailed instructions on deploying an ASP.NET MVC application to Azure App Service, refer to the official documentation: Deploy an ASP.NET MVC app to Azure App Service
