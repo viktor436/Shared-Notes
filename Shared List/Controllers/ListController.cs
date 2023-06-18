@@ -213,7 +213,6 @@ namespace Shared_List.Controllers
                 return NotFound();
             }
 
-            // Ensure that the current user has the necessary rights to share the note
             var userId = _userManager.GetUserId(User);
             var userList = await _dbContext.UserLists.FirstOrDefaultAsync(ul => ul.ListId == id && ul.UserId == userId);
             if (userList == null)
@@ -246,7 +245,6 @@ namespace Shared_List.Controllers
                 return NotFound();
             }
 
-            // Ensure that the current user has the necessary rights to share the note
             var userId = _userManager.GetUserId(User);
             var userList = await _dbContext.UserLists.FirstOrDefaultAsync(ul => ul.ListId == id && ul.UserId == userId);
             if (userList == null)
@@ -271,6 +269,33 @@ namespace Shared_List.Controllers
             }
 
             return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveAccess(int noteId, string userId)
+        {
+            var userNote = await _dbContext.UserLists.FirstOrDefaultAsync(ul => ul.ListId == noteId && ul.UserId == userId);
+            if (userNote != null)
+            {
+                _dbContext.UserLists.Remove(userNote);
+                await _dbContext.SaveChangesAsync();
+
+                var remainingAccess = await _dbContext.UserLists.AnyAsync(ul => ul.ListId == noteId);
+                if (!remainingAccess)
+                {
+                    var note = await _dbContext.Lists.FindAsync(noteId);
+                    if (note != null)
+                    {
+                        _dbContext.Lists.Remove(note);
+                        await _dbContext.SaveChangesAsync();
+                    }
+
+                    return RedirectToAction("Index");
+                }
+            }
+
+            return RedirectToAction("Share", new { id = noteId });
         }
 
     }
