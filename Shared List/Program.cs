@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Shared_List.Data;
 using Shared_List.Models;
+using Shared_List.Services;
 using Shared_List.Singleton;
 
 
@@ -18,6 +20,8 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
 builder.Services.AddControllersWithViews();
 
 builder.Services.Configure<Config>(builder.Configuration.GetSection("Config"));
+builder.Services.AddTransient<IEmailSender, EmailService>();
+
 
 var configuration = builder.Configuration;
 builder.Services.AddAuthentication().AddFacebook(options =>
