@@ -37,7 +37,7 @@ This is a web application built with ASP.NET MVC and Entity Framework Core. It a
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/your-username/your-repo.git
+   git clone https://github.com/viktor436/Shared-Notes.git
    
 2. Open the solution file (SharedList.sln) in Visual Studio.
 
